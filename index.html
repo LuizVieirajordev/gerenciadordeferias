@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Férias de Equipe</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">Gerenciador de Férias de Equipe</h1>
+        
+        <!-- Formulário de Cadastro -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Cadastro de Funcionário</h2>
+            <form id="employeeForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nome</label>
+                        <input type="text" id="name" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Função</label>
+                        <input type="text" id="role" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Horário de Trabalho</label>
+                        <input type="text" id="workHours" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-lg font-medium">Períodos de Férias</h3>
+                    
+                    <!-- Primeira Parcela -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">1ª Parcela - Início</label>
+                            <input type="date" id="period1Start" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">1ª Parcela - Fim</label>
+                            <input type="date" id="period1End" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Dias Utilizados</label>
+                            <input type="text" id="period1Days" readonly class="mt-1 block w-full bg-gray-50 rounded-md border-gray-300">
+                        </div>
+                    </div>
+
+                    <!-- Segunda Parcela -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">2ª Parcela - Início</label>
+                            <input type="date" id="period2Start" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">2ª Parcela - Fim</label>
+                            <input type="date" id="period2End" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Dias Utilizados</label>
+                            <input type="text" id="period2Days" readonly class="mt-1 block w-full bg-gray-50 rounded-md border-gray-300">
+                        </div>
+                    </div>
+
+                    <!-- Terceira Parcela -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">3ª Parcela - Início</label>
+                            <input type="date" id="period3Start" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">3ª Parcela - Fim</label>
+                            <input type="date" id="period3End" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Dias Utilizados</label>
+                            <input type="text" id="period3Days" readonly class="mt-1 block w-full bg-gray-50 rounded-md border-gray-300">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Total de Dias</label>
+                            <input type="text" id="totalDays" readonly class="mt-1 block w-48 bg-gray-50 rounded-md border-gray-300">
+                        </div>
+                        <div id="remainingDaysAlert" class="hidden text-yellow-600 font-medium">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Adicionar Funcionário</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista de Funcionários -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Funcionários Cadastrados</h2>
+                <div class="space-x-2">
+                    <button onclick="exportToPDF()" class="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700">PDF</button>
+                    <button onclick="exportToExcel()" class="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700">Excel</button>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table id="employeeTable" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Função</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Horário</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Férias</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="calendar" class="mt-8"></div>
+    </div>
+
+    <script>
+        // Armazenamento dos funcionários
+        let employees = JSON.parse(localStorage.getItem('employees')) || [];
+
+        // Função para calcular dias entre duas datas
+        function calculateDays(start, end) {
+            if (!start || !end) return 0;
+            const startDate = new Date(start);
+            const endDate = new Date(end);
+            const diffTime = Math.abs(endDate - startDate);
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        }
+
+        // Função para atualizar dias de cada período
+        function updatePeriodDays() {
+            const periods = [
+                { start: 'period1Start', end: 'period1End', days: 'period1Days' },
+                { start: 'period2Start', end: 'period2End', days: 'period2Days' },
+                { start: 'period3Start', end: 'period3End', days: 'period3Days' }
+            ];
+
+            let total = 0;
+            periods.forEach(period => {
+                const start = document.getElementById(period.start).value;
+                const end = document.getElementById(period.end).value;
+                const days = calculateDays(start, end);
+                document.getElementById(period.days).value = days || 0;
+                total += days;
+            });
+
+            document.getElementById('totalDays').value = total;
+            const remainingDays = 30 - total;
+            const alert = document.getElementById('remainingDaysAlert');
+            
+            if (remainingDays > 0) {
+                alert.textContent = `Sobraram ${remainingDays} dias de férias`;
+                alert.classList.remove('hidden');
+            } else if (remainingDays < 0) {
+                alert.textContent = `Excedeu ${Math.abs(remainingDays)} dias do limite`;
+                alert.classList.remove('hidden');
+            } else {
+                alert.classList.add('hidden');
+            }
+        }
+
+        // Adicionar listeners para os campos de data
+        ['period1Start', 'period1End', 'period2Start', 'period2End', 'period3Start', 'period3End'].forEach(id => {
+            document.getElementById(id).addEventListener('change', updatePeriodDays);
+        });
+
+        // Função para adicionar funcionário
+        document.getElementById('employeeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const employee = {
+                id: Date.now(),
+                name: document.getElementById('name').value,
+                role: document.getElementById('role').value,
+                workHours: document.getElementById('workHours').value,
+                periods: [
+                    {
+                        start: document.getElementById('period1Start').value,
+                        end: document.getElementById('period1End').value
+                    },
+                    {
+                        start: document.getElementById('period2Start').value,
+                        end: document.getElementById('period2End').value
+                    },
+                    {
+                        start: document.getElementById('period3Start').value,
+                        end: document.getElementById('period3End').value
+                    }
+                ]
+            };
+
+            employees.push(employee);
+            localStorage.setItem('employees', JSON.stringify(employees));
+            updateTable();
+            this.reset();
+            document.getElementById('totalDays').value = '';
+            document.getElementById('remainingDaysAlert').classList.add('hidden');
+        });
+
+// Função para formatar data para o padrão brasileiro
+function formatDate(dateString) {
+        if (!dateString) return '-';
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`;
+    }
+
+    // Função para verificar sobreposição de períodos
+    function hasOverlap(period1Start, period1End, period2Start, period2End) {
+        if (!period1Start || !period1End || !period2Start || !period2End) return false;
+        const start1 = new Date(period1Start);
+        const end1 = new Date(period1End);
+        const start2 = new Date(period2Start);
+        const end2 = new Date(period2End);
+        return start1 <= end2 && start2 <= end1;
+    }
+
+    // Função para verificar conflitos de horário e período
+    function checkConflicts(employee, otherEmployees) {
+        return otherEmployees.some(other => {
+            if (other.id === employee.id) return false;
+            if (other.workHours !== employee.workHours) return false;
+            
+            return employee.periods.some(period1 => 
+                other.periods.some(period2 => 
+                    hasOverlap(period1.start, period1.end, period2.start, period2.end)
+                )
+            );
+        });
+    }
+
+
+
+         // Função atualizada para renderizar a tabela
+    function updateTable() {
+        const tbody = document.querySelector('#employeeTable tbody');
+        tbody.innerHTML = '';
+
+        employees.forEach(employee => {
+            const hasConflict = checkConflicts(employee, employees);
+            const row = document.createElement('tr');
+            if (hasConflict) {
+                row.classList.add('bg-red-100');
+            }
+            
+            let totalDays = 0;
+            const periodsHtml = employee.periods.map((p, i) => {
+                const days = calculateDays(p.start, p.end);
+                totalDays += days;
+                return p.start && p.end ? 
+                    `${i+1}ª: ${formatDate(p.start)} a ${formatDate(p.end)} (${days} dias)` : 
+                    '';
+            }).filter(p => p).join('<br>');
+
+            const remainingDays = 30 - totalDays;
+            const remainingDaysText = remainingDays > 0 ? 
+                `<span class="text-yellow-600">Restam ${remainingDays} dias</span>` : 
+                remainingDays < 0 ? 
+                `<span class="text-red-600">Excedeu ${Math.abs(remainingDays)} dias</span>` : 
+                '<span class="text-green-600">Férias completas</span>';
+
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">${employee.name}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${employee.role}</td>
+                <td class="px-6 py-4 whitespace-nowrap">${employee.workHours}</td>
+                <td class="px-6 py-4">${periodsHtml}</td>
+                <td class="px-6 py-4">${remainingDaysText}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <button onclick="deleteEmployee(${employee.id})" class="text-red-600 hover:text-red-900">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        updateCalendar();
+    }
+
+    // Função para atualizar o calendário
+    function updateCalendar() {
+        const calendarDiv = document.getElementById('calendar');
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        
+        let calendarHtml = '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">';
+        
+        // Gerar calendário para cada mês
+        for (let month = 0; month < 12; month++) {
+            const firstDay = new Date(currentYear, month, 1);
+            const lastDay = new Date(currentYear, month + 1, 0);
+            const monthName = firstDay.toLocaleString('pt-BR', { month: 'long' });
+            
+            calendarHtml += `
+                <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="text-lg font-semibold mb-2 text-center capitalize">${monthName}</h3>
+                    <div class="grid grid-cols-7 gap-1">
+                        <div class="text-center text-sm font-medium">D</div>
+                        <div class="text-center text-sm font-medium">S</div>
+                        <div class="text-center text-sm font-medium">T</div>
+                        <div class="text-center text-sm font-medium">Q</div>
+                        <div class="text-center text-sm font-medium">Q</div>
+                        <div class="text-center text-sm font-medium">S</div>
+                        <div class="text-center text-sm font-medium">S</div>
+            `;
+
+            // Preencher dias vazios no início
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                calendarHtml += '<div></div>';
+            }
+
+            // Preencher os dias do mês
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const currentDate = new Date(currentYear, month, day);
+                const employeesOnVacation = employees.filter(emp => 
+                    emp.periods.some(period => {
+                        if (!period.start || !period.end) return false;
+                        const startDate = new Date(period.start);
+                        const endDate = new Date(period.end);
+                        return currentDate >= startDate && currentDate <= endDate;
+                    })
+                );
+
+                const hasVacation = employeesOnVacation.length > 0;
+                const vacationNames = employeesOnVacation.map(emp => emp.name).join(', ');
+                
+                calendarHtml += `
+                    <div class="relative p-1 text-center ${hasVacation ? 'bg-blue-100' : ''}" 
+                         title="${hasVacation ? 'Férias: ' + vacationNames : ''}">
+                        <span class="text-sm">${day}</span>
+                        ${hasVacation ? `
+                            <div class="absolute bottom-0 left-0 right-0 text-xs text-blue-600 truncate">
+                                ${vacationNames}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+
+            calendarHtml += '</div></div>';
+        }
+
+        calendarHtml += '</div>';
+        calendarDiv.innerHTML = calendarHtml;
+    }
+
+
+        // Função para deletar funcionário
+        function deleteEmployee(id) {
+            employees = employees.filter(emp => emp.id !== id);
+            localStorage.setItem('employees', JSON.stringify(employees));
+            updateTable();
+        }
+
+        // Função para exportar para PDF
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.text('Relatório de Férias', 14, 15);
+            let y = 30;
+
+            employees.forEach((employee, index) => {
+                doc.text(`Nome: ${employee.name}`, 14, y);
+                doc.text(`Função: ${employee.role}`, 14, y + 7);
+                doc.text(`Horário: ${employee.workHours}`, 14, y + 14);
+                
+                employee.periods.forEach((period, i) => {
+                    if (period.start && period.end) {
+                        doc.text(`${i+1}ª Parcela: ${period.start} a ${period.end}`, 14, y + 21 + (i * 7));
+                    }
+                });
+
+                y += 50;
+                if (y > 250) {
+                    doc.addPage();
+                    y = 30;
+                }
+            });
+
+            doc.save('ferias.pdf');
+        }
+
+        // Atualizar a função de exportação para Excel
+    function exportToExcel() {
+        const data = employees.map(emp => {
+            const totalDays = emp.periods.reduce((sum, period) => 
+                sum + calculateDays(period.start, period.end), 0);
+            const remainingDays = 30 - totalDays;
+
+            return {
+                Nome: emp.name,
+                Função: emp.role,
+                Horário: emp.workHours,
+                'Férias 1ª Parcela': emp.periods[0].start ? 
+                    `${formatDate(emp.periods[0].start)} a ${formatDate(emp.periods[0].end)} (${calculateDays(emp.periods[0].start, emp.periods[0].end)} dias)` : '-',
+                'Férias 2ª Parcela': emp.periods[1].start ? 
+                    `${formatDate(emp.periods[1].start)} a ${formatDate(emp.periods[1].end)} (${calculateDays(emp.periods[1].start, emp.periods[1].end)} dias)` : '-',
+                'Férias 3ª Parcela': emp.periods[2].start ? 
+                    `${formatDate(emp.periods[2].start)} a ${formatDate(emp.periods[2].end)} (${calculateDays(emp.periods[2].start, emp.periods[2].end)} dias)` : '-',
+                'Dias Totais': totalDays,
+                'Dias Restantes': remainingDays
+            };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Férias");
+        
+        const colWidths = [
+            { wch: 20 }, // Nome
+            { wch: 15 }, // Função
+            { wch: 15 }, // Horário
+            { wch: 30 }, // 1ª Parcela
+            { wch: 30 }, // 2ª Parcela
+            { wch: 30 }, // 3ª Parcela
+            { wch: 15 }, // Dias Totais
+            { wch: 15 }  // Dias Restantes
+        ];
+        ws['!cols'] = colWidths;
+
+        XLSX.writeFile(wb, "ferias.xlsx");
+    }
+
+    // Inicializar a tabela ao carregar a página
+    updateTable();
+</script>
+
+</body>
+
